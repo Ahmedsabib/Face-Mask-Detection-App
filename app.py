@@ -1,10 +1,11 @@
 import streamlit as st
 import cv2
 import numpy as np
+import tempfile
 from PIL import Image
 from ultralytics import YOLO
 
-# Load YOLOv8 model (replace with your trained model path)
+# Load YOLOv8 model
 model = YOLO("best.pt")
 
 # UI Customizations
@@ -14,7 +15,7 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
-    html, body, [class*="css"]  {
+    html, body, [class*="css"] {
         font-family: 'Inter', sans-serif;
         background-color: #121212;
         color: #ffffff;
@@ -51,7 +52,7 @@ st.markdown("""
         color: #e0f7fa;
     }
 
-    .stFileUploader, .stRadio, .stCheckbox {
+    .stFileUploader {
         background-color: #1e1e1e !important;
         border-radius: 8px;
         padding: 1em;
@@ -60,12 +61,11 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
 st.markdown("<div class='main'>", unsafe_allow_html=True)
 st.markdown("## 😷 Face Mask Detection App with YOLOv8")
 
-# Upload image or use webcam
-option = st.radio("Choose input source:", ["Upload Image", "Use Webcam"])
+# Radio: choose between image or video
+option = st.radio("Choose input source:", ["Upload Image", "Upload Video"])
 
 if option == "Upload Image":
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -78,26 +78,28 @@ if option == "Upload Image":
             annotated_img = results.plot()
             st.image(annotated_img, caption="Detected Output", use_column_width=True)
 
-elif option == "Use Webcam":
-    st.warning("Click the checkbox below to activate webcam.")
-    run_webcam = st.checkbox("Start Webcam")
+elif option == "Upload Video":
+    uploaded_video = st.file_uploader("Upload a video", type=["mp4", "mov", "avi", "mkv"])
+    if uploaded_video:
+        # Save video to temp file
+        tfile = tempfile.NamedTemporaryFile(delete=False)
+        tfile.write(uploaded_video.read())
+        cap = cv2.VideoCapture(tfile.name)
 
-    if run_webcam:
         stframe = st.empty()
-        cap = cv2.VideoCapture(0)
 
-        while run_webcam:
-            ret, frame = cap.read()
-            if not ret:
-                st.error("Failed to capture frame.")
-                break
+        with st.spinner("Processing video..."):
+            while cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
 
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = model.predict(frame_rgb, imgsz=640)[0]
-            annotated_frame = results.plot()
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                results = model.predict(frame_rgb, imgsz=640)[0]
+                annotated_frame = results.plot()
 
-            stframe.image(annotated_frame, channels="BGR", use_column_width=True)
+                stframe.image(annotated_frame, channels="BGR", use_column_width=True)
 
-        cap.release()
+            cap.release()
 
 st.markdown("</div>", unsafe_allow_html=True)
