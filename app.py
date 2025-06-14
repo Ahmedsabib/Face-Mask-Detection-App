@@ -71,12 +71,12 @@ if option == "Upload Image":
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_file:
         image = Image.open(uploaded_file).convert("RGB")
-        st.image(image, caption="Uploaded Image", use_column_width=True)
+        st.image(image, caption="Uploaded Image", use_container_width=True)
 
         with st.spinner("Detecting..."):
             results = model.predict(np.array(image), imgsz=640)[0]
             annotated_img = results.plot()
-            st.image(annotated_img, caption="Detected Output", use_column_width=True)
+            st.image(annotated_img, caption="Detected Output", use_container_width=True)
 
 elif option == "Upload Video":
     uploaded_video = st.file_uploader("Upload a video", type=["mp4", "mov", "avi", "mkv"])
@@ -98,7 +98,7 @@ elif option == "Upload Video":
                 results = model.predict(frame_rgb, imgsz=640)[0]
                 annotated_frame = results.plot()
 
-                stframe.image(annotated_frame, channels="BGR", use_column_width=True)
+                stframe.image(annotated_frame, channels="BGR", use_container_width=True)
 
             cap.release()
 
