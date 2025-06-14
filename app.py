@@ -5,7 +5,7 @@ from PIL import Image
 from ultralytics import YOLO
 
 # Load YOLOv8 model (replace with your trained model path)
-model = YOLO("C:/Users/USER/Desktop/Face Mask Detection App/best.pt")
+model = YOLO("best.pt")
 
 # UI Customizations
 st.set_page_config(page_title="😷 Face Mask Detector", layout="centered")
